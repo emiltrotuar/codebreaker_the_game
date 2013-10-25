@@ -1,92 +1,117 @@
-require "codebreaker/version"
+# require "codebreaker/version"
 
 module Codebreaker
   class Game
-    def initialize(input,output,player)
+    def initialize(input=$stdin, output=$stdout)
       @input = input
       @output = output
-      @player = player
-      @turns = 1
+      @turns = 0
       generate_secret_code
+      # p @secret_code
+      start
     end
- 
+
     def start
       @output.puts 'Welcome to Codebreaker!'
-      @output.puts 'Enter guess:'
-      @guess = @input.gets
-      return unless @guess =~ /\d+/
-      check
+      @output.puts 'Enter your guess or request a hint:'
+      submit
+      result = case check
+      when 'won'
+        you_won
+      when 'lose'
+        you_lose
+      end
     end
 
     def submit
-    	@guess = @input.gets.split //
-      check
+      g = @input.gets.chop
+      @guess = case g
+      when 'r'
+        request_hint
+        submit
+      else
+        g.split(//).select do |i|
+          /\d+/.match i
+        end.map!(&:to_i)[0..3]
+      end
     end
 
     def generate_secret_code
       @secret_code=[]
-
-    	4.times do
-    		@secret_code << rand(6)
-    	end
-    	if @secret_code.uniq.count < 4
-    		loop do
-	    		@secret_code << rand(6)
-	    		break if @secret_code.uniq.count == 4
-    		end
-    	end
+      loop do
+        @secret_code << rand(1..6)
+        @secret_code.uniq!
+        break if @secret_code.count == 4
+      end
     end
 
     def check
       @marks = []
-    	4.times do |i|
-	    	if @secret_code[i] == @guess[i]
-	    		@marks << '+'
-	    	elsif @guess.index @secret_code[i]
-	    		@marks << '-'
-	    	else 
-          next
+      4.times do |i|
+        if @secret_code[i] == @guess[i]
+         @marks << '+'
+       elsif @guess.index @secret_code[i]
+         @marks << '-'
+       else 
+        next
         end
-    	end
-    	@marks.count < 4
-    	if !(@marks.index '-')
-    		unless @marks.count < 4
-    			you_win
-    		else
-    			@marks.clear
-          @turns+=1
-          submit
+      end
+      if !(@marks.index '-')
+        unless @marks.count < 4
+          @guess=[]
+          'won'
+        else
+          next_attempt_or_defeat
         end
       elsif @marks.index '-'
-        p "#{@marks}"
-        @turns+=1
-    		@marks.clear
-    		submit
-    	else
-    		you_lose
+        next_attempt_or_defeat
+      else
+        @guess=[]
+        'lose'
       end
     end
 
-    def you_win
-    	p 'congratulations! you win!'
-    	p 'do you want to play again?'
+    def next_attempt_or_defeat
+      @marks.each { |m| print m  }; @output.puts
+      @guess=[]
+      @turns+=1
+      return 'lose' if @turns >= 3
+      @output.puts "#{3-@turns} attempts left"
+      @marks.clear
+      submit
+      check
+    end
+
+    def you_won
+      @output.puts 'Congratulations! You win!'
       save_score
+      @output.puts 'Do you want to play again?'
+      play_again
     end
 
     def you_lose
-    	p 'unfortunately you lose!'
-    	p 'do you want to try again?'
-      save_score
+      @output.puts 'Unfortunately you lose!'
+      @output.puts 'Do you want to try again? [yn]'
+      play_again
     end
 
+    def play_again
+      dec = @input.gets.chop
+      return unless dec == 'y'
+      initialize
+    end
 
     def request_hint
-      p "secret code contains #{@secret_code[rand 4]}"
+      rnd = @secret_code[rand 4]
+      @output.puts "secret code contains #{rnd}"
+      rnd
     end
 
     def save_score
-      File.open 'scores.txt', 'w' do |f|  
-        f.puts "#{@player.name}: #{@turns}"    
+      @output.puts 'Please enter your name, we want to save your score:'
+      your_name = @input.gets.chop
+      File.open 'score.txt', 'w' do |f|  
+        f.puts "#{your_name}: #{30-@turns*10}"  
       end
     end
   end
