@@ -5,13 +5,12 @@ module Codebreaker
     def initialize(input=$stdin, output=$stdout)
       @input = input
       @output = output
-      @turns = 0
-      generate_secret_code
-      # p @secret_code
-      start
     end
 
     def start
+      @turns = 0
+      @secret_code = generate_secret_code
+      # p @secret_code
       @output.puts 'Welcome to Codebreaker!'
       @output.puts 'Enter your guess or request a hint:'
       submit
@@ -37,11 +36,11 @@ module Codebreaker
     end
 
     def generate_secret_code
-      @secret_code=[]
+      sc = []
       loop do
-        @secret_code << rand(1..6)
-        @secret_code.uniq!
-        break if @secret_code.count == 4
+       sc << rand(1..6)
+        sc.uniq!
+        return sc if sc.count == 4
       end
     end
 
@@ -50,10 +49,10 @@ module Codebreaker
       4.times do |i|
         if @secret_code[i] == @guess[i]
          @marks << '+'
-       elsif @guess.index @secret_code[i]
+        elsif @guess.index @secret_code[i]
          @marks << '-'
-       else 
-        next
+        else 
+          next
         end
       end
       if !(@marks.index '-')
@@ -98,7 +97,7 @@ module Codebreaker
     def play_again
       dec = @input.gets.chop
       return unless dec == 'y'
-      initialize
+      start
     end
 
     def request_hint

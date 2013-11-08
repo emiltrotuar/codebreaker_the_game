@@ -1,3 +1,3 @@
 require_relative "codebreaker.rb"
 
-Codebreaker::Game.new
+Codebreaker::Game.new.start
