@@ -48,21 +48,17 @@ module Codebreaker
       @marks = []
       4.times do |i|
         if @secret_code[i] == @guess[i]
-         @marks << '+'
-        elsif @guess.index @secret_code[i]
-         @marks << '-'
+          @marks << '+'
+        elsif @secret_code.index @guess[i]
+          @marks << '-'
         else 
-          next
+          @marks << 'N'
         end
       end
-      if !(@marks.index '-')
-        unless @marks.count < 4
-          @guess=[]
-          'won'
-        else
-          next_attempt_or_defeat
-        end
-      elsif @marks.index '-'
+      if !(@marks.index '-') && !(@marks.index 'N')
+        @guess=[]
+        'won'
+      elsif (@marks.index '-') || (@marks.index 'N')
         next_attempt_or_defeat
       else
         @guess=[]
