@@ -9,10 +9,12 @@ module Codebreaker
 
     def start
       @turns = 0
+      @hint = 0
+      @hint_count = 2
       @secret_code = generate_secret_code
       # p @secret_code
       @output.puts 'Welcome to Codebreaker!'
-      @output.puts 'Enter your guess or request a hint:'
+      @output.puts 'Enter your guess (you may also request 2 hints, hit "r"):'
       submit
       result = case check
       when 'won'
@@ -38,7 +40,7 @@ module Codebreaker
     def generate_secret_code
       sc = []
       loop do
-       sc << rand(1..6)
+        sc << rand(1..6)
         sc.uniq!
         return sc if sc.count == 4
       end
@@ -97,9 +99,17 @@ module Codebreaker
     end
 
     def request_hint
-      rnd = @secret_code[rand 4]
-      @output.puts "secret code contains #{rnd}"
-      rnd
+      return @output.puts "You have no more hints" if @hint_count == 0
+      th = nil
+      loop do
+        th = @secret_code[rand 4]
+        break if @hint != th
+        next
+      end
+      @hint = th
+      @output.puts "secret code contains #{@hint}"
+      @hint_count -= 1
+      @hint
     end
 
     def save_score

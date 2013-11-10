@@ -10,13 +10,12 @@ module Codebreaker
 
     it "sends a welcome message and prompts for the first guess" do
       output.should_receive(:puts).with('Welcome to Codebreaker!')
-      output.should_receive(:puts).with('Enter your guess or request a hint:')
+      output.should_receive(:puts).with('Enter your guess (you may also request 2 hints, hit "r"):')
       game.start
     end
 
     it "generates a secret code" do
-      game.start
-      sc = game.instance_variable_get(:@secret_code)
+      sc = game.generate_secret_code
       sc.count.should eq 4
       sc.each { |i| i.class.should eq Fixnum }
     end
@@ -25,6 +24,12 @@ module Codebreaker
       game.start
       sc = game.instance_variable_get(:@secret_code)
       sc.index(game.request_hint).should be_true
+    end
+
+    it "gives only 2 hints" do
+      game.start
+      output.should_receive(:puts).with("You have no more hints")
+      3.times { game.request_hint }
     end
 
     it "submits your guess" do
